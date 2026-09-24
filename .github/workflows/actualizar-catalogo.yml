@@ -1,0 +1,36 @@
+name: Actualizar catálogo de WhatsApp
+
+on:
+  schedule:
+    # todos los días a las 06:10 UTC (08:10 en España en horario de verano)
+    - cron: "10 6 * * *"
+  workflow_dispatch:        # permite lanzarlo a mano desde la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generar el archivo desde laboncler.es
+        run: node build.mjs
+
+      - name: Publicar si ha cambiado
+        run: |
+          if [ -n "$(git status --porcelain catalogo-whatsapp.csv)" ]; then
+            git config user.name "Aura Prestige Bot"
+            git config user.email "actions@github.com"
+            git add catalogo-whatsapp.csv
+            git commit -m "Catálogo actualizado $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+            echo "Catálogo actualizado."
+          else
+            echo "Sin cambios respecto a ayer."
+          fi
