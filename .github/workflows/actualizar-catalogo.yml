@@ -22,6 +22,10 @@ jobs:
       - name: Generar el archivo desde laboncler.es
         run: node build.mjs
 
+      - name: Avisar a la web auraprestige.es para que actualice precios y agotados
+        continue-on-error: true
+        run: curl -s --max-time 300 "https://auraprestige.es/wp-json/aura-sync/v1/estado?t=$(date +%s)"; echo
+
       - name: Publicar si ha cambiado
         run: |
           if [ -n "$(git status --porcelain catalogo-whatsapp.csv)" ]; then
