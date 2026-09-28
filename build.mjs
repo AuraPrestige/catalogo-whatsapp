@@ -16,12 +16,31 @@ async function descargar() {
   return productos;
 }
 
+// Productos publicados en la web auraprestige.es (para enlazar cada producto a su ficha)
+async function productosWeb() {
+  const slugs = new Set();
+  try {
+    for (let page = 1; page <= 20; page++) {
+      const r = await fetch(`https://auraprestige.es/wp-json/wc/store/v1/products?per_page=100&page=${page}`, { headers: UA });
+      if (!r.ok) break;
+      const d = await r.json();
+      if (!d.length) break;
+      d.forEach(p => slugs.add(p.slug));
+    }
+  } catch (e) {
+    console.log("Aviso: no se pudo leer auraprestige.es (" + e.message + "); se enlaza a la portada.");
+  }
+  return slugs;
+}
+
 const productos = await descargar();
 if (productos.length < 300) throw new Error(`Solo se han leído ${productos.length} productos; se aborta para no vaciar el catálogo.`);
+const enWeb = await productosWeb();
+console.log(`auraprestige.es: ${enWeb.size} productos publicados`);
 
 const cuerpo = fs.readFileSync(new URL("./buildFeed.js", import.meta.url), "utf8");
-const buildFeed = new Function("productos", cuerpo);
-const csv = buildFeed(productos);
+const buildFeed = new Function("productos", "enWeb", cuerpo);
+const csv = buildFeed(productos, enWeb);
 
 const filas = csv.split("\n").length;
 if (!csv.startsWith("id,title,") || csv.length < 50000) throw new Error("El CSV generado no tiene buena pinta; se aborta.");

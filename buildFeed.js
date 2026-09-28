@@ -110,8 +110,8 @@ for (const p of productos) {
         q("new"),
         q((antes && antes > precio ? antes : precio).toFixed(2) + " EUR"),
         q(sale),
-        q(enCatalogo ? "https://aura-prestige.sumupstore.com/product/" + slug(p.title)
-                     : "https://aura-prestige.sumupstore.com/productos"),
+        q(enWeb && enWeb.has(p.handle) ? "https://auraprestige.es/producto/" + p.handle + "/"
+                                       : "https://auraprestige.es/"),
         q(img.split("?")[0]),
         q("Laboncler"),
         q(cat(p))
